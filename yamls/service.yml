@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: akshitgrover-1516
+  namespace: "1516"
+spec:
+  type: NodePort
+  selector:
+    tenant: "1516"
+    user: akshitgrover
+  ports:
+  - nodePort: 30002
+    port: 8080
+    targetPort: 80
+

@@ -5,11 +5,38 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/akshitgrover/saas_k8s/models"
 	"github.com/globalsign/mgo"
 	yaml "gopkg.in/yaml.v2"
 )
+
+var portCounter = 30000
+
+func createService(r models.Pod) string {
+	f, _ := os.OpenFile("yamls/service.yml", os.O_RDWR, 0755)
+	defer f.Close()
+	stat, _ := f.Stat()
+	b := make([]byte, stat.Size())
+	f.Read(b)
+	fmt.Println(string(b))
+	var r_ models.Service
+	yaml.Unmarshal(b, &r_)
+	r_.Metadata["name"] = r.Metadata.Name
+	r_.Metadata["namespace"] = r.Metadata.Namespace
+	r_.Spec.Selector["tenant"] = r.Metadata.Labels["tenant"]
+	r_.Spec.Selector["user"] = r.Metadata.Labels["user"]
+	r_.Spec.Ports[0]["targetPort"] = 80
+	r_.Spec.Ports[0]["nodePort"] = portCounter
+	portCounter += 1
+	b_, _ := yaml.Marshal(r_)
+	f.WriteAt(b_, 0)
+	cmd := exec.Command("kubectl", "apply", "-f", "yamls/service.yml")
+	registerStreams(cmd)
+	cmd.Run()
+	return strconv.Itoa(r_.Spec.Ports[0]["nodePort"])
+}
 
 func Create(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
 	return func(res http.ResponseWriter, req *http.Request) {
@@ -48,5 +75,8 @@ func Create(db *mgo.Database) func(http.ResponseWriter, *http.Request) {
 		cmd := exec.Command("kubectl", "apply", "-f", "yamls/pod.yml")
 		registerStreams(cmd)
 		cmd.Run()
+		res.WriteHeader(200)
+		port := createService(r)
+		res.Write([]byte(port))
 	}
 }

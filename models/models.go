@@ -1,5 +1,18 @@
 package models
 
+type ServiceSpec struct {
+	Type     string             `yaml:"type"`
+	Selector map[string]string  `yaml:"selector"`
+	Ports    [](map[string]int) `yaml:"ports"`
+}
+
+type Service struct {
+	ApiVersion string            `yaml:"apiVersion"`
+	Kind       string            `yaml:"kind"`
+	Metadata   map[string]string `yaml:"metadata"`
+	Spec       ServiceSpec       `yaml:"spec"`
+}
+
 type ResourceQuota struct {
 	ApiVersion string                       `yaml:"apiVersion"`
 	Kind       string                       `yaml:"kind"`
