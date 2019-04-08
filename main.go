@@ -15,5 +15,6 @@ func main() {
 		log.Fatal(err)
 	}
 	http.HandleFunc("/register", controllers.Register(db))
+	http.HandleFunc("/create", controllers.Create(db))
 	http.ListenAndServe(":3004", nil)
 }
